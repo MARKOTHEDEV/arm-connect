@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Image from "next/image";
 import { ChevronRight } from "lucide-react";
 import { useQueryState, parseAsBoolean, parseAsString, parseAsInteger } from "nuqs";
@@ -9,6 +9,14 @@ import { OnboardingModal } from "@/components/onboarding/OnboardingModal";
 import { SubmissionSuccessModal } from "@/components/onboarding/SubmissionSuccessModal";
 
 export default function DashboardPage() {
+  return (
+    <Suspense fallback={<div className="px-[24px] py-[32px] max-w-[1132px] mx-auto w-full"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>}>
+      <DashboardContent />
+    </Suspense>
+  );
+}
+
+function DashboardContent() {
   const [onboarding, setOnboarding] = useQueryState("onboarding", parseAsBoolean.withDefault(false));
   const [model, setModel] = useQueryState("model", parseAsString.withDefault(""));
   const [step, setStep] = useQueryState("step", parseAsInteger.withDefault(0));

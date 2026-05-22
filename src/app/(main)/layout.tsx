@@ -1,4 +1,5 @@
 import { AuthGuard } from "@/guard/AuthGuard";
+import { Navbar } from "@/components/main/Navbar";
 
 export default function MainLayout({
   children,
@@ -8,7 +9,8 @@ export default function MainLayout({
   return (
     <AuthGuard>
       <div className="min-h-screen flex flex-col bg-[#f7f7f7]">
-{children}
+        <Navbar />
+        <main className="flex-1">{children}</main>
       </div>
     </AuthGuard>
   );

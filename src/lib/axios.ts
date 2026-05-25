@@ -10,14 +10,11 @@ const api = axios.create({
 
 // Public auth endpoints that don't need token
 const publicEndpoints = [
-  "/auth/login",
-  "/auth/forgot-password-request",
-  "/auth/validate-otp",
-  "/auth/verify-login-otp",
-  "/auth/validate-reset-password-otp",
-  "/auth/confirm-reset-password",
-  "/users/register",
-  "/users/verify-email",
+  "/login",
+  "/validate",
+  "/register",
+  "/otp/validate",
+  "/otp/resend-otp",
 ];
 
 // Request interceptor - only attach token for non-public endpoints

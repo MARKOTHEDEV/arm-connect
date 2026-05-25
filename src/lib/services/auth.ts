@@ -4,151 +4,94 @@ import {
   type LoginResponse,
   type ApiResponse,
   type User,
-  type ForgotPasswordRequest,
-  type ValidateOtpRequest,
-  OTP_PURPOSE,
 } from "@/types";
+
+function normalize<T>(result: ApiResponse<T>): ApiResponse<T> {
+  if (result.status !== undefined && result.success === undefined) {
+    result.success = result.status;
+  }
+  return result;
+}
 
 export async function loginUser(
   data: LoginRequest
 ): Promise<ApiResponse<LoginResponse>> {
-  const response = await api.post<ApiResponse<LoginResponse>>(
-    "/auth/login",
-    {
-      ...data,
-      isPasswordEncrypted: false,
-    }
-  );
-  return response.data;
+  const response = await api.post<ApiResponse<LoginResponse>>("/merchant2/login", data);
+  return normalize(response.data);
 }
 
-export async function forgotPassword(
-  data: ForgotPasswordRequest
-): Promise<ApiResponse<null>> {
-  const response = await api.post<ApiResponse<null>>(
-    "/auth/forgot-password-request",
-    data
-  );
-  return response.data;
-}
-
-export async function verifyEmail(
-  data: { email: string }
-): Promise<ApiResponse<null>> {
-  const response = await api.post<ApiResponse<null>>(
-    "/users/verify-email",
-    data
-  );
-  return response?.data;
-}
-
-export interface RegisterRequest {
+export interface ValidateSignupRequest {
+  businessName: string;
+  firstName: string;
+  lastName: string;
   email: string;
-  password: string;
-  confirmPassword: string;
-  consentedToShareData: boolean;
-  referralCode: string | null;
+  phoneNumber: string;
 }
 
-export interface RegisterResponse {
-  token: {
-    token: string;
-    refreshToken: string;
-    expiresAt: string;
-  };
+export interface ValidateSignupResponse {
+  businessNameExists: boolean;
+  emailExists: boolean;
+  otpSent: boolean;
 }
 
-export async function registerUser(
-  data: RegisterRequest
-): Promise<ApiResponse<RegisterResponse>> {
-  const response = await api.post<ApiResponse<RegisterResponse>>(
-    "/users/register",
-    data
-  );
-  return response.data;
+export async function validateSignup(
+  data: ValidateSignupRequest
+): Promise<ApiResponse<ValidateSignupResponse>> {
+  const response = await api.post<ApiResponse<ValidateSignupResponse>>("/merchant2/validate", data);
+  return normalize(response.data);
 }
 
-async function hashPin(pin: string): Promise<string> {
-  const encoded = new TextEncoder().encode(pin);
-  const hashBuffer = await crypto.subtle.digest("SHA-256", encoded);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-
-export async function createPin(
-  data: { pin: string; confirmPin: string; email: string }
-): Promise<ApiResponse<null>> {
-  const [hashedPin, confirmHashedPin] = await Promise.all([
-    hashPin(data.pin),
-    hashPin(data.confirmPin),
-  ]);
-
-  const response = await api.post<ApiResponse<null>>(
-    "/auth/create-pin",
-    { email: data.email, hashedPin, confirmHashedPin }
-  );
-  return response.data;
+export interface ValidateOtpRequest {
+  identifier: string;
+  isActivation: boolean;
+  otp: string;
+  otpPurpose: string;
 }
 
 export async function validateOtp(
   data: ValidateOtpRequest
-): Promise<ApiResponse<null>> {
-  const response = await api.post<ApiResponse<null>>(
-    "/auth/validate-otp",
-    { ...data, purpose: OTP_PURPOSE.Register }
-  );
-  return response.data;
+): Promise<ApiResponse<{ isValid: boolean }>> {
+  const response = await api.post<ApiResponse<{ isValid: boolean }>>("/Otp/validate-otp", data);
+  return normalize(response.data);
 }
 
-export async function verifyLoginOtp(
-  data: { email: string; otp: string }
-): Promise<ApiResponse<null>> {
-  const response = await api.post<ApiResponse<null>>(
-    "/auth/verify-login-otp",
-  data
-  );
-  return response.data;
+export interface ResendOtpRequest {
+  email: string;
+  firstName: string;
+  lastName: string;
+  source: string;
+  otpPurpose: string;
 }
 
-export async function validateResetPasswordOtp(
-  data: { identifier: string; otp: string; isActivation: boolean }
+export async function resendOtp(
+  data: ResendOtpRequest
 ): Promise<ApiResponse<null>> {
-  const response = await api.post<ApiResponse<null>>(
-    "/auth/validate-reset-password-otp",
-    { ...data, purpose: OTP_PURPOSE.ResetPassword }
-  );
-  return response.data;
+  const response = await api.post<ApiResponse<null>>("/otp/resend-otp", data);
+  return normalize(response.data);
 }
 
-export async function resetPassword(
-  data: { email: string; newPassword: string; confirmPassword: string }
+export interface RegisterRequest {
+  businessName: string;
+  contactEmail: string;
+  firstName: string;
+  lastName: string;
+  contactPhone: string;
+  password: string;
+  callbackUrl: string;
+}
+
+export async function registerUser(
+  data: RegisterRequest
 ): Promise<ApiResponse<null>> {
-  const response = await api.post<ApiResponse<null>>(
-    "/auth/confirm-reset-password",
-    data
-  );
-  return response.data;
+  const response = await api.post<ApiResponse<null>>("/merchant2/register", data);
+  return normalize(response.data);
 }
 
 export function extractUserFromLoginResponse(data: LoginResponse): User {
   return {
-    email: data.email,
-    firstname: data.firstname,
-    lastname: data.lastname,
-    membershipId: data.membershipId,
-    accountTier: data.accountTier,
-    accountCategory: data.accountCategory,
-    phone: data.phone,
-    gender: data.gender,
-    dateOfBirth: data.dateOfBirth,
-    approvalStatus: data.approvalStatus,
-    hasPin: data.hasPin,
-    isTemporaryPassword: data.isTemporaryPassword,
-    isBVNVerified: data.isBVNVerified,
-    isMigratedUser: data.isMigratedUser,
-    zanibalId: data.zanibalId,
-    tourGuideStatus: data.tourGuideStatus,
-    preferences: data.preferences,
-    isPinSetup: data.isPinSetup,
+    merchantId: data.merchantId,
+    businessName: data.businessName,
+    contactEmail: data.contactEmail,
+    apiKey: data.apiKey,
   };
 }

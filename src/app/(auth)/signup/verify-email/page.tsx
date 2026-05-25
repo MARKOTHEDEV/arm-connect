@@ -1,43 +1,91 @@
 "use client";
 
-import { Suspense, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { OtpInput } from "@/components/auth/OtpInput";
+import { useSignupStore } from "@/components/auth/signup-store";
+import { validateOtp, resendOtp } from "@/lib/services/auth";
 
-function VerifyEmailContent() {
+export default function SignupVerifyEmailPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const email = searchParams.get("email") || "";
+  const { email, firstName, lastName } = useSignupStore();
 
   const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
   const [timer, setTimer] = useState(59);
   const [canResend, setCanResend] = useState(false);
 
   useEffect(() => {
+    if (!email) {
+      router.replace("/signup");
+    }
+  }, [email, router]);
+
+  useEffect(() => {
     if (timer > 0) {
-      const interval = setInterval(() => {
-        setTimer((prev) => prev - 1);
-      }, 1000);
+      const interval = setInterval(() => setTimer((prev) => prev - 1), 1000);
       return () => clearInterval(interval);
     } else {
       setCanResend(true);
     }
   }, [timer]);
 
-  const handleResend = () => {
-    if (!canResend) return;
-    setTimer(59);
-    setCanResend(false);
-  };
+  const validateMutation = useMutation({
+    mutationFn: validateOtp,
+    onSuccess: (response) => {
+      if (!response.success && !response.status) {
+        toast.error(response.message || "Invalid OTP.");
+        return;
+      }
+      toast.success(response.message || "OTP verified.");
+      router.push("/signup/create-password");
+    },
+    onError: (error: { response?: { data?: { message?: string } } }) => {
+      toast.error(error.response?.data?.message || "OTP verification failed.");
+    },
+  });
+
+  const resendMutation = useMutation({
+    mutationFn: resendOtp,
+    onSuccess: (response) => {
+      if (!response.success && !response.status) {
+        toast.error(response.message || "Failed to resend OTP.");
+        return;
+      }
+      toast.success(response.message || "OTP resent to your email.");
+      setTimer(59);
+      setCanResend(false);
+    },
+    onError: () => {
+      toast.error("Failed to resend OTP.");
+    },
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const otpValue = otp.join("");
     if (otpValue.length !== 6) return;
-    router.push(`/signup/create-password?email=${encodeURIComponent(email)}`);
+    validateMutation.mutate({
+      identifier: email,
+      isActivation: false,
+      otp: otpValue,
+      otpPurpose: "Register",
+    });
+  };
+
+  const handleResend = () => {
+    if (!canResend || resendMutation.isPending) return;
+    resendMutation.mutate({
+      email,
+      firstName,
+      lastName,
+      source: "",
+      otpPurpose: "Register",
+    });
   };
 
   const formatTime = (seconds: number) => {
@@ -48,8 +96,10 @@ function VerifyEmailContent() {
 
   const otpFilled = otp.join("").length === 6;
 
+  if (!email) return null;
+
   return (
-    <div className="w-full max-w-[487px] bg-white border border-card-stroke rounded-[10px] p-[32px] overflow-hidden">
+    <div className="w-full max-w-[487px] bg-white border border-card-stroke rounded-[10px] p-[32px] overflow-hidden mx-auto">
       <div className="flex flex-col gap-[24px]">
         {/* Back Button */}
         <div className="flex items-center">
@@ -105,14 +155,15 @@ function VerifyEmailContent() {
                 <button
                   type="button"
                   onClick={handleResend}
-                  disabled={!canResend}
+                  disabled={!canResend || resendMutation.isPending}
                   className="text-[14px] font-bold text-primary leading-[24px] disabled:opacity-50"
                 >
-                  Resend
+                  {resendMutation.isPending ? "Sending..." : "Resend"}
                 </button>
               </div>
               <button
                 type="button"
+                onClick={() => router.push("/signup")}
                 className="text-[14px] font-bold text-text-body tracking-[-0.14px] leading-[24px]"
               >
                 Try a different email
@@ -122,30 +173,16 @@ function VerifyEmailContent() {
             {/* Continue Button */}
             <button
               type="submit"
-              disabled={!otpFilled}
+              disabled={!otpFilled || validateMutation.isPending}
               className="w-full h-[56px] bg-primary rounded-[4px] flex items-center justify-center disabled:opacity-50"
             >
               <span className="font-semibold text-[14px] text-white">
-                Continue
+                {validateMutation.isPending ? "Verifying..." : "Continue"}
               </span>
             </button>
           </form>
         </div>
       </div>
     </div>
-  );
-}
-
-export default function SignupVerifyEmailPage() {
-  return (
-    <Suspense
-      fallback={
-        <div className="w-full max-w-[487px] flex items-center justify-center p-[32px]">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-        </div>
-      }
-    >
-      <VerifyEmailContent />
-    </Suspense>
   );
 }

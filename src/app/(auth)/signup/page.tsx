@@ -6,8 +6,12 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { CountryCodeSelect, DEFAULT_COUNTRY, type Country } from "@/components/auth/CountryCodeSelect";
+import { useSignupStore } from "@/components/auth/signup-store";
+import { validateSignup } from "@/lib/services/auth";
 import { ROUTES } from "@/lib/routes";
 
 const signupSchema = z.object({
@@ -23,19 +27,42 @@ type SignupFormData = z.infer<typeof signupSchema>;
 export default function SignupPage() {
   const router = useRouter();
   const [selectedCountry, setSelectedCountry] = useState<Country>(DEFAULT_COUNTRY);
+  const { setSignupData } = useSignupStore();
 
   const {
     register,
     handleSubmit,
     formState: { isValid },
-    getValues,
   } = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
     mode: "onChange",
   });
 
+  const validateMutation = useMutation({
+    mutationFn: validateSignup,
+    onSuccess: (response, variables) => {
+      if (!response.success && !response.status) {
+        toast.error(response.message || "Validation failed.");
+        return;
+      }
+      toast.success(response.message || "OTP sent to your email.");
+      router.push("/signup/verify-email");
+    },
+    onError: (error: { response?: { data?: { message?: string } } }) => {
+      toast.error(error.response?.data?.message || "Something went wrong. Please try again.");
+    },
+  });
+
   const onSubmit = (data: SignupFormData) => {
-    router.push(`/signup/verify-email?email=${encodeURIComponent(data.email)}`);
+    const payload = {
+      businessName: data.businessName,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      email: data.email,
+      phoneNumber: data.phone,
+    };
+    setSignupData(payload);
+    validateMutation.mutate(payload);
   };
 
   return (
@@ -141,9 +168,7 @@ export default function SignupPage() {
           <div className="flex items-start justify-center">
             <p className="text-[12px] font-semibold text-text-body leading-[18px] text-center w-[353px]">
               By clicking on continue, I agree to ARM One&apos;s{" "}
-              <span className="text-black underline">
-                Terms and Conditions
-              </span>{" "}
+              <span className="text-black underline">Terms and Conditions</span>{" "}
               and acknowledge{" "}
               <span className="text-black">the </span>
               <span className="text-black underline">Privacy Policy</span>
@@ -153,7 +178,8 @@ export default function SignupPage() {
           {/* Submit Button */}
           <Button
             type="submit"
-            disabled={!isValid}
+            disabled={!isValid || validateMutation.isPending}
+            isLoading={validateMutation.isPending}
             className="w-full h-[48px] rounded-[4px] text-[14px] font-semibold disabled:opacity-50"
           >
             Agree and Continue

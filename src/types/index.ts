@@ -10,56 +10,25 @@ export const ACCOUNT_CATEGORY = {
 export type AccountCategoryCode = keyof typeof ACCOUNT_CATEGORY;
 
 export interface User {
-  email: string;
-  firstname: string | null;
-  lastname: string | null;
-  membershipId: string | null;
-  accountTier: string | null;
-  accountCategory: number | null;
-  phone: string;
-  gender: string | null;
-  dateOfBirth: string | null;
-  approvalStatus: string;
-  hasPin: boolean;
-  isTemporaryPassword: boolean;
-  isBVNVerified: boolean;
-  isMigratedUser: boolean;
-  zanibalId: string | null;
-  tourGuideStatus: string | null;
-  preferences: Record<string, unknown> | null;
-  isPinSetup: boolean;
+  merchantId: string;
+  businessName: string;
+  contactEmail: string;
+  apiKey: string;
 }
 
 export interface LoginRequest {
   email: string;
   password: string;
-  pin?: string;
-  isPasswordEncrypted?: boolean;
 }
 
 export interface LoginResponse {
   token: string;
   refreshToken: string;
   expiresAt: string;
-  email: string;
-  firstname: string | null;
-  lastname: string | null;
-  membershipId: string | null;
-  accountTier: string | null;
-  accountCategory: number | null;
-  phone: string;
-  gender: string | null;
-  dateOfBirth: string | null;
-  approvalStatus: string;
-  hasPin: boolean;
-  isTemporaryPassword: boolean;
-  isBVNVerified: boolean;
-  isMigratedUser: boolean;
-  zanibalId: string | null;
-  tourGuideStatus: string | null;
-  preferences: Record<string, unknown> | null;
-  isFirstLogin: boolean;
-  isPinSetup: boolean;
+  merchantId: string;
+  businessName: string;
+  contactEmail: string;
+  apiKey: string;
 }
 
 export interface ForgotPasswordRequest {
@@ -75,7 +44,9 @@ export interface ValidateOtpRequest {
 export interface ApiResponse<T> {
   data: T;
   message: string;
-  success: boolean;
+  status: boolean;
+  statusCode: number;
+  success: boolean; // alias for status
   errors: string[] | null;
 }
 

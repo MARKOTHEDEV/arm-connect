@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
+import { useLoginMutation } from "@/hooks/useLoginMutation";
 import { ROUTES } from "@/lib/routes";
 
 const loginSchema = z.object({
@@ -18,6 +19,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const loginMutation = useLoginMutation();
 
   const {
     register,
@@ -29,7 +31,7 @@ export default function LoginPage() {
   });
 
   const onSubmit = (data: LoginFormData) => {
-    console.log("Login submitted:", data);
+    loginMutation.mutate(data);
   };
 
   return (
@@ -109,21 +111,22 @@ export default function LoginPage() {
             </div>
 
             {/* Activate Existing Account */}
-            <div className="flex items-center justify-center h-[31px] px-[16px] py-[12px] rounded-[4px]">
+            {/* <div className="flex items-center justify-center h-[31px] px-[16px] py-[12px] rounded-[4px]">
               <Link
                 href="/activate-account"
                 className="text-[14px] font-bold text-primary text-center"
               >
                 Activate Existing Account
               </Link>
-            </div>
+            </div> */}
           </div>
 
           {/* Confirm Button */}
           <div className="flex flex-col gap-[31px] items-center w-full">
             <Button
               type="submit"
-              disabled={!isValid}
+              disabled={!isValid || loginMutation.isPending}
+              isLoading={loginMutation.isPending}
               className="w-full h-[48px] rounded-[4px] text-[14px] font-semibold"
             >
               Confirm

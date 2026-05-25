@@ -8,30 +8,24 @@ import type { LoginRequest } from "@/types";
 
 export function useLoginMutation() {
   const router = useRouter();
-  const { setUser, setAccessToken, setRefreshToken, setFirstLogin } = useUserStore();
+  const { setUser, setAccessToken, setRefreshToken } = useUserStore();
 
   return useMutation({
-    mutationFn: (data: LoginRequest) =>
-      loginUser({ email: data.email, password: data.password }),
+    mutationFn: (data: LoginRequest) => loginUser(data),
     onSuccess: (response) => {
-      if (!response.success) {
+      if (!response.success && !response.status) {
         toast.error(response.message || "Login failed.");
         return;
       }
 
-      const { token, refreshToken, expiresAt, isFirstLogin } = response.data;
+      const { token, refreshToken, expiresAt } = response.data;
       const user = extractUserFromLoginResponse(response.data);
 
       setAccessToken(token);
       setRefreshToken(refreshToken, expiresAt);
       setUser(user);
 
-      if (isFirstLogin) {
-        setFirstLogin(true);
-        router.push(`${ROUTES.FIRST_LOGIN}/verify-otp`);
-      } else {
-        router.push(ROUTES.DASHBOARD);
-      }
+      router.push(ROUTES.DASHBOARD);
     },
     onError: (error: { response?: { status?: number; data?: { message?: string; title?: string } } }) => {
       const message = error.response?.data?.message

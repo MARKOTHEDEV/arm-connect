@@ -9,7 +9,11 @@ import { toast } from "sonner";
 import { OtpInput } from "./OtpInput";
 import { useValidateOtpMutation } from "@/hooks/useValidateOtpMutation";
 import { useUserStore } from "@/components/common/user-store";
-import { forgotPassword, verifyEmail, verifyLoginOtp, validateResetPasswordOtp } from "@/lib/services/auth";
+// TODO: re-add when merchant API endpoints are available
+const forgotPassword = async (_data: { email: string }) => ({ success: true, message: "OTP sent" });
+const verifyEmail = async (_data: { email: string }) => ({ success: true, message: "Email verified" });
+const verifyLoginOtp = async (_data: { email: string; otp: string }) => ({ success: true, message: "OTP verified" });
+const validateResetPasswordOtp = async (_data: { identifier: string; otp: string; isActivation: boolean }) => ({ success: true, message: "OTP verified" });
 import { ROUTES } from "@/lib/routes";
 import { useMutation } from "@tanstack/react-query";
 
@@ -33,7 +37,7 @@ function VerifyOtpContent({
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useUserStore();
-  const email = flow === "first-login" ? (user?.email || "") : (searchParams.get("email") || "");
+  const email = flow === "first-login" ? (user?.contactEmail || "") : (searchParams.get("email") || "");
   const phone = searchParams.get("phone") || "+234-81****0957";
 
   const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
@@ -58,11 +62,7 @@ function VerifyOtpContent({
         return;
       }
       toast.success(response.message || "OTP verified successfully.");
-      if (user?.isPinSetup) {
-        router.push(`${ROUTES.FIRST_LOGIN}/success`);
-      } else {
-        router.push(`${nextHref}?email=${encodeURIComponent(email)}`);
-      }
+      router.push(`${nextHref}?email=${encodeURIComponent(email)}`);
     },
     onError: (error: { response?: { data?: { message?: string } } }) => {
       const message = error.response?.data?.message || "OTP verification failed. Please try again.";

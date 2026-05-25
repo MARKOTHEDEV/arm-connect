@@ -1,7 +1,11 @@
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { validateOtp } from "@/lib/services/auth";
 import type { ValidateOtpRequest } from "@/types";
+
+// TODO: wire to merchant API when endpoint is available
+async function validateOtp(_data: ValidateOtpRequest) {
+  return { success: true, message: "OTP validated." };
+}
 
 interface UseValidateOtpMutationOptions {
   onSuccess?: () => void;
@@ -19,10 +23,8 @@ export function useValidateOtpMutation({ onSuccess }: UseValidateOtpMutationOpti
       toast.success(response.message || "OTP verified successfully.");
       onSuccess?.();
     },
-    onError: (error: { response?: { data?: { message?: string; title?: string } } }) => {
-      const message =
-        error.response?.data?.message || error.response?.data?.title || "OTP verification failed. Please try again.";
-      toast.error(message);
+    onError: () => {
+      toast.error("OTP verification failed. Please try again.");
     },
   });
 }

@@ -1,9 +1,12 @@
 "use client";
 
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
-import { ChevronDown } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { ChevronDown, LogOut } from "lucide-react";
+import { useUserStore } from "@/components/common/user-store";
+import { ROUTES } from "@/lib/routes";
 
 const navLinks = [
   { label: "Dashboard", href: "/dashboard" },
@@ -15,6 +18,25 @@ const navLinks = [
 
 export function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, logout } = useUserStore();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleLogout = () => {
+    logout();
+    router.push(ROUTES.LOGIN);
+  };
 
   return (
     <nav className="w-full bg-white border-b border-[#eaecf0] py-[12px] px-[24px] flex items-center justify-between">
@@ -55,12 +77,29 @@ export function Navbar() {
           );
         })}
 
-        {/* User */}
-        <div className="flex items-center gap-[9px]">
-          <span className="text-[14px] font-semibold text-text-header leading-[20px]">
-            Babatunde Ijesha
-          </span>
-          <ChevronDown className="w-[18px] h-[18px] text-text-header" />
+        {/* User Dropdown */}
+        <div className="relative" ref={dropdownRef}>
+          <button
+            onClick={() => setDropdownOpen(!dropdownOpen)}
+            className="flex items-center gap-[9px]"
+          >
+            <span className="text-[14px] font-semibold text-text-header leading-[20px]">
+              {user?.businessName || "User"}
+            </span>
+            <ChevronDown className={`w-[18px] h-[18px] text-text-header transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
+          </button>
+
+          {dropdownOpen && (
+            <div className="absolute right-0 top-[40px] w-[200px] bg-white border border-card-stroke rounded-[8px] shadow-lg z-50 overflow-hidden">
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-[10px] px-[16px] py-[12px] hover:bg-[#f9fafb] transition-colors text-left"
+              >
+                <LogOut className="w-[16px] h-[16px] text-[#d92d20]" />
+                <span className="text-[14px] font-medium text-[#d92d20]">Logout</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </nav>

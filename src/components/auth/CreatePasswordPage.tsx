@@ -12,7 +12,10 @@ import {
   usePasswordValidation,
 } from "./PasswordWithCriteria";
 import Cookies from "js-cookie";
-import { registerUser, resetPassword } from "@/lib/services/auth";
+
+// TODO: re-add when merchant API endpoints are available
+const registerUser = async (_data: { email: string; password: string; confirmPassword: string; consentedToShareData: boolean; referralCode: string | null }) => ({ success: true, message: "Registered", data: { token: { token: "" } } } as { success: boolean; message: string; data: { token: { token: string } } });
+const resetPassword = async (_data: { email: string; newPassword: string; confirmPassword: string }) => ({ success: true, message: "Password reset" });
 
 interface CreatePasswordPageProps {
   title: string;

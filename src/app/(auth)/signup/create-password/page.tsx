@@ -1,43 +1,80 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { ArrowLeft, Lock } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
   PasswordInput,
   PasswordCriteriaList,
   usePasswordValidation,
 } from "@/components/auth/PasswordWithCriteria";
+import { SignupSuccessModal } from "@/components/auth/SignupSuccessModal";
+import { useSignupStore } from "@/components/auth/signup-store";
+import { registerUser } from "@/lib/services/auth";
+import { ROUTES } from "@/lib/routes";
 
-function CreatePasswordContent() {
+export default function SignupCreatePasswordPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const email = searchParams.get("email") || "";
+  const { businessName, firstName, lastName, email, phoneNumber, clear } = useSignupStore();
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const allCriteriaPassed = usePasswordValidation(password);
   const passwordsMatch = password === confirmPassword && confirmPassword !== "";
   const canSubmit = allCriteriaPassed && passwordsMatch;
 
+  useEffect(() => {
+    if (!email) {
+      router.replace("/signup");
+    }
+  }, [email, router]);
+
+  const registerMutation = useMutation({
+    mutationFn: registerUser,
+    onSuccess: (response) => {
+      if (!response.success && !response.status) {
+        toast.error(response.message || "Registration failed.");
+        return;
+      }
+      clear();
+      setShowSuccess(true);
+    },
+    onError: (error: { response?: { data?: { message?: string } } }) => {
+      toast.error(error.response?.data?.message || "Registration failed. Please try again.");
+    },
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSubmit) return;
-    router.push("/login");
+    registerMutation.mutate({
+      businessName,
+      contactEmail: email,
+      firstName,
+      lastName,
+      contactPhone: phoneNumber,
+      password,
+      callbackUrl: "",
+    });
   };
 
+  if (!email) return null;
+
   return (
-    <div className="w-full max-w-[487px] bg-white border border-card-stroke rounded-[10px] p-[32px] overflow-hidden">
+    <div className="w-full max-w-[487px] bg-white border border-card-stroke rounded-[10px] p-[32px] overflow-hidden mx-auto">
       <div className="flex flex-col gap-[24px]">
         {/* Back Button */}
         <div className="flex items-center">
           <Link
-            href={`/signup/verify-email?email=${encodeURIComponent(email)}`}
+            href="/signup/verify-email"
             className="w-[38px] h-[38px] rounded-full bg-[#ebebeb] flex items-center justify-center"
           >
             <ArrowLeft className="text-[#0D111C] w-[18px] h-[18px]" strokeWidth={2} />
@@ -82,11 +119,11 @@ function CreatePasswordContent() {
           {/* Continue Button */}
           <button
             type="submit"
-            disabled={!canSubmit}
+            disabled={!canSubmit || registerMutation.isPending}
             className="w-full h-[48px] bg-primary rounded-[4px] flex items-center justify-center disabled:opacity-50"
           >
             <span className="font-semibold text-[14px] text-white">
-              Continue
+              {registerMutation.isPending ? "Creating account..." : "Continue"}
             </span>
           </button>
 
@@ -99,20 +136,10 @@ function CreatePasswordContent() {
           </div>
         </form>
       </div>
-    </div>
-  );
-}
 
-export default function SignupCreatePasswordPage() {
-  return (
-    <Suspense
-      fallback={
-        <div className="w-full max-w-[487px] flex items-center justify-center p-[32px]">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-        </div>
-      }
-    >
-      <CreatePasswordContent />
-    </Suspense>
+      {showSuccess && (
+        <SignupSuccessModal onClose={() => router.push(ROUTES.LOGIN)} />
+      )}
+    </div>
   );
 }

@@ -1,9 +1,13 @@
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { forgotPassword } from "@/lib/services/auth";
 import { ROUTES } from "@/lib/routes";
 import type { ForgotPasswordRequest } from "@/types";
+
+// TODO: wire to merchant API when endpoint is available
+async function forgotPassword(data: ForgotPasswordRequest) {
+  return { success: true, message: "OTP sent to your email." };
+}
 
 export function useForgotPasswordMutation() {
   const router = useRouter();
@@ -21,10 +25,8 @@ export function useForgotPasswordMutation() {
         `${ROUTES.FORGOT_PASSWORD}/verify-email?email=${encodeURIComponent(variables.email)}`
       );
     },
-    onError: (error: { response?: { data?: { message?: string; title?: string } } }) => {
-      const message =
-        error.response?.data?.message || error.response?.data?.title || "Something went wrong. Please try again.";
-      toast.error(message);
+    onError: () => {
+      toast.error("Something went wrong. Please try again.");
     },
   });
 }

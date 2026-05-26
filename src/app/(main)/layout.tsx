@@ -12,6 +12,7 @@ export default function MainLayout({
         <Navbar />
         <main className="flex-1">{children}</main>
       </div>
+      {/* just comment */}
     </AuthGuard>
   );
 }

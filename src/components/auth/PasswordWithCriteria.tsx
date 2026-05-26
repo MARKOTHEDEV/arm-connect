@@ -50,7 +50,7 @@ export function PasswordInput({
         className="w-[24px] h-[24px] flex items-center justify-center"
       >
         <Image
-          src="/icons/eye.svg"
+          src={showPassword ? "/icons/eye-off.svg" : "/icons/eye.svg"}
           alt={showPassword ? "Hide password" : "Show password"}
           width={20}
           height={14}

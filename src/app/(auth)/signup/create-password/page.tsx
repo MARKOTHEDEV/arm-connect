@@ -32,10 +32,10 @@ export default function SignupCreatePasswordPage() {
   const canSubmit = allCriteriaPassed && passwordsMatch;
 
   useEffect(() => {
-    if (!email) {
+    if (!email && !showSuccess) {
       router.replace("/signup");
     }
-  }, [email, router]);
+  }, [email, showSuccess, router]);
 
   const registerMutation = useMutation({
     mutationFn: registerUser,
@@ -44,8 +44,8 @@ export default function SignupCreatePasswordPage() {
         toast.error(response.message || "Registration failed.");
         return;
       }
-      clear();
       setShowSuccess(true);
+      // clear store after showing modal, not before
     },
     onError: (error: { response?: { data?: { message?: string } } }) => {
       toast.error(error.response?.data?.message || "Registration failed. Please try again.");
@@ -138,7 +138,10 @@ export default function SignupCreatePasswordPage() {
       </div>
 
       {showSuccess && (
-        <SignupSuccessModal onClose={() => router.push(ROUTES.LOGIN)} />
+        <SignupSuccessModal onClose={() => {
+          clear();
+          router.push(ROUTES.LOGIN);
+        }} />
       )}
     </div>
   );

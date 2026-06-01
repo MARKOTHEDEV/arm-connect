@@ -153,58 +153,63 @@ function DashboardContent() {
         </div>
       </div>
 
-      {/* Explore Other Investments */}
-      <div className="bg-white border border-card-stroke rounded-[8px] p-[24px] flex flex-col gap-[16px] overflow-hidden">
-        {/* Header */}
+      {/* Your Virtual Accounts */}
+      <div className="flex flex-col gap-[24px]">
         <div className="flex items-center justify-between">
           <h2 className="font-extrabold text-[18px] text-text-header leading-[20px]">
-            Explore Other Investments
+            Your Virtual Accounts
           </h2>
           <button className="bg-[#ebebeb] rounded-[4px] px-[14px] py-[6px]">
-            <span className="text-[14px] font-bold text-primary leading-normal">
-              View Products
-            </span>
+            <span className="text-[14px] font-bold text-primary leading-normal">Manage All</span>
           </button>
         </div>
-
-        {/* Cards */}
-        <div className="flex gap-[24px]">
+        <div className="grid grid-cols-3 gap-[24px]">
           {[
-            {
-              title: "Mutual Funds",
-              description: "View all Mutual Funds offerings",
-              image: "/images/invest-mutual-funds.png",
-            },
-            {
-              title: "Treasury Bills",
-              description: "View all Treasury Bills offerings",
-              image: "/images/invest-treasury-bills.png",
-            },
-            {
-              title: "Stocks",
-              description: "View all Stock offerings",
-              image: "/images/invest-stocks.png",
-            },
-          ].map((item) => (
+            { name: "ARM Money Market Fund", icon: "/icons/ellipse-pink.svg", accountNo: "0928374655", bank: "Access Bank PLC", balance: "₦6,500,000.00" },
+            { name: "ARM Ethical Fund", icon: "/icons/ellipse-stone.svg", accountNo: "0928374655", bank: "Access Bank PLC", balance: "₦12,000,000.00" },
+            { name: "ARM Discovery Fund", icon: "/icons/ellipse-dark.svg", accountNo: "0928374655", bank: "Access Bank PLC", balance: "₦8,500,000.00" },
+            { name: "ARM Aggressive Growth Fund", icon: "/icons/ellipse-pink.svg", accountNo: "0928374655", bank: "Access Bank PLC", balance: "₦6,500,000.00" },
+          ].map((account) => (
             <div
-              key={item.title}
-              className="flex-1 bg-white border border-card-stroke rounded-[8px] p-[18px] flex gap-[10px] overflow-hidden cursor-pointer hover:border-primary/30 transition-colors"
+              key={account.name}
+              className="bg-white border border-card-stroke rounded-[8px] p-[25px] flex flex-col gap-[16px]"
             >
-              <div className="flex-1 flex flex-col gap-[8px] justify-center">
-                <div className="relative w-[66px] h-[57px]">
-                  <Image src={item.image} alt="" fill className="object-contain" />
+              {/* Header: icon + badge */}
+              <div className="flex items-center justify-between pb-[12px]">
+                <div className="relative w-[40px] h-[40px]">
+                  <Image src={account.icon} alt="" fill className="object-contain" />
                 </div>
-                <div className="flex flex-col gap-[4px]">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[18px] font-bold text-text-body-2 leading-normal">
-                      {item.title}
-                    </span>
-                    <ChevronRight className="w-[24px] h-[24px] text-text-body-2" />
-                  </div>
-                  <span className="text-[14px] font-normal text-text-body leading-[20px]">
-                    {item.description}
-                  </span>
-                </div>
+                <span className="bg-[#ecfdf3] text-[12px] font-bold text-[#067647] leading-[18px] px-[12px] py-[4px] rounded-full">
+                  Created
+                </span>
+              </div>
+
+              {/* Fund Name */}
+              <h3 className="font-bold text-[22px] text-[#1a1c1c] leading-[33px]">
+                {account.name}
+              </h3>
+
+              {/* Account Details */}
+              <div className="flex flex-col gap-[4px] pb-[24px]">
+                <span className="text-[16px] font-normal text-[#1a1c1c] leading-[24px] font-mono">
+                  VIRTUAL ACCOUNT NUMBER
+                </span>
+                <span className="text-[16px] font-normal text-[#1a1c1c] leading-[24px] font-mono">
+                  {account.accountNo}
+                </span>
+                <span className="text-[16px] font-normal text-[#1a1c1c] leading-[24px]">
+                  {account.bank}
+                </span>
+              </div>
+
+              {/* Book Balance */}
+              <div className="border-t border-[#e5e7eb] pt-[25px] flex items-center justify-between">
+                <span className="text-[14px] font-normal text-text-header leading-[18px]">
+                  BOOK BALANCE
+                </span>
+                <span className="text-[16px] font-bold text-[#0b0e1a] leading-[27px]">
+                  {account.balance}
+                </span>
               </div>
             </div>
           ))}
